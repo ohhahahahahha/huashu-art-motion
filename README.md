@@ -11,12 +11,14 @@
 36种艺术风格 · 9种解说语法 · 8种参数化片段 · 口播整片参考代码
 
 ```sh
-npx skills add alchaincyf/huashu-art-motion
+git clone --branch codex/story-driven-ip-whiteboard https://github.com/ohhahahahahha/huashu-art-motion.git
 ```
 
 [看动画](#动画样片) · [看风格](#看效果) · [开始使用](#里面有什么) · [下载完整样片](https://github.com/alchaincyf/huashu-art-motion/releases/latest)
 
 </div>
+
+本 fork 增加「固定 IP，按新故事生成动作图集」与「白板画出角色后接续动作」流程，支持一二布布等用户指定角色。使用说明见 [IP角色故事](references/IP角色故事.md)，与原作者的更新合并方式见 [维护指南](CONTRIBUTING.md)。原项目由花叔开发，原有艺术风格与图文白板继续保留；故事生图由 Agent 调用当前实际图片工具完成。
 
 ## 动态
 
@@ -213,7 +215,7 @@ MIT License © [花叔 Huashu](https://github.com/alchaincyf)
 
 It started as a code-only recreation of Tak's ([@cherry_mx_reds](https://x.com/cherry_mx_reds/status/2106095190285144331)) 15-second *Art History Speedrun*. The scene layouts and the girl-and-cat premise follow his original; every frame here is redrawn in code, and no frames, screenshots or audio from the original are included.
 
-Install: `npx skills add alchaincyf/huashu-art-motion`. Requires uv, ffmpeg and Playwright Chromium. The skill content is in Chinese. The ninth grammar, presenter-led explainers, ships as a reference implementation and requires your own character assets. Full-narration examples are code snapshots, not ready-to-render projects. Code and docs are MIT; the bundled stroke medians retain the Arphic Public License; bundled fonts keep their SIL OFL licenses; the Huashu character artwork, including its appearance in overview images and demo videos, is for demo use only. Clawd is Anthropic's Claude Code mascot; the *Clawd: Night at the Museum* clips are an unofficial fan demo, not affiliated with Anthropic and not covered by MIT. Paintings in it are The Met Open Access (CC0) images redrawn in code.
+For this fork, clone the branch shown above and use its SKILL.md. Requires uv, ffmpeg and Playwright Chromium. The skill content is in Chinese. The ninth grammar, presenter-led explainers, ships as a reference implementation and requires your own character assets. Full-narration examples are code snapshots, not ready-to-render projects. Code and docs are MIT; the bundled stroke medians retain the Arphic Public License; bundled fonts keep their SIL OFL licenses; the Huashu character artwork, including its appearance in overview images and demo videos, is for demo use only. Clawd is Anthropic's Claude Code mascot; the *Clawd: Night at the Museum* clips are an unofficial fan demo, not affiliated with Anthropic and not covered by MIT. Paintings in it are The Met Open Access (CC0) images redrawn in code.
 
 ## 可选媒体能力
 

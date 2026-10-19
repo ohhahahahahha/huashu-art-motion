@@ -23,6 +23,8 @@ __pycache__/
 node_modules/
 _archive/
 _private/
+# Local stories, IP references and generated project assets
+/创作/
 
 # User configuration stays outside the installed skill
 /media.json

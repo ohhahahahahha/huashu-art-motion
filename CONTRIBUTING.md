@@ -2,6 +2,27 @@
 
 公共代码、公共推荐放在包内；个人平台、声音和凭证引用保存在安装目录外。不要把个人经验变成所有人的默认授权。
 
+## 本 fork 与上游同步
+
+本 fork：`https://github.com/ohhahahahahha/huashu-art-motion`；原作者仓库：`https://github.com/alchaincyf/huashu-art-motion`。保留原作者署名与 LICENSE。定制功能维护在 `codex/story-driven-ip-whiteboard`，上游基线版本仍写在 SKILL metadata.version。
+
+本地 `origin` 指向 fork，`upstream` 指向原作者，默认推送到 origin。`创作/` 是用户的本地故事、角色与产物，已加入根目录忽略规则；发布只暂存公共修改，不运行 `git add .`。按下方发布检查核对 Git 对象；不要把这些私人素材上传到 fork。
+
+需要同步作者更新时，先处理未提交修改，再在独立分支合并并验证：
+
+```sh
+git fetch upstream
+git switch -c codex/sync-upstream codex/story-driven-ip-whiteboard
+git merge upstream/main
+# 如有冲突，保留本 fork 的故事动作流程与接口，结合上游变更解决并跑测试
+python -m unittest discover -s tests -v
+# 验证后再将同步结果纳入定制分支
+git switch codex/story-driven-ip-whiteboard
+git merge --ff-only codex/sync-upstream
+```
+
+同步分支名已使用时换一个新名字。完成同步后按下方流程重新生成发布清单，再提交、推送到 origin；fork 可以隔离定制改动，但不保证未来合并没有冲突。不要用重新下载覆盖定制目录来更新。
+
 ## 本地检查
 
 ```sh

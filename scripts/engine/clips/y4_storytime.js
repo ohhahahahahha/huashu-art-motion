@@ -2,7 +2,8 @@
 // 镜头不慢推、不手持漂、角色不呼吸：定住就是定住，变化靠快切、跳近（反应特写砸进来）和插入镜头。
 // data.character（必填）：帧库——render.py 里写一个目录（文件名去扩展名 = 姿势名），或 {frames: {rest, talk, point, shrug, type, stiff, react, back, <姿势>_open: 路径}}。
 //                 代码画的小人（'neutral' / 'bun' / 'author' / 造型对象）已停用：不给帧库就启动失败。
-//                   至少要有 rest 或 talk；缺的姿势退到 talk → rest；<姿势>_open 是张嘴帧（说话时一拍二换）；react 是反应特写，back 是插入镜头前景的后脑勺。
+//                   至少要有 rest 或 talk；显式 data.pose 缺帧会失败，未指定姿势的默认讲述退到 talk → rest。
+//                   <姿势>_open 是张嘴帧（说话时一拍二换）；react 是反应特写，back 是插入镜头前景的后脑勺。
 //                   帧图要透明底、角色脚底在图片底边中间，画出来高 ≈ 3.15 个头半径。没有 back 帧时插入镜头不画前景后脑勺。
 // cues：point | title（角色说一句：at 这一帧气泡弹出、开始张嘴；嘴按 text 的字数说 ≈6.5 字/秒；data.pose 指定姿势 talk/point/shrug/type）
 //         气泡里写什么：有 sub 就写 sub（≤12 字的短句最好），没有才写 text——口播原文交给管线的字幕，气泡别和字幕重复一遍
@@ -48,6 +49,11 @@ return {
     if (!ch || typeof ch !== 'object' || !ch.frames || typeof ch.frames !== 'object') throw new Error(NEED_FRAMES + (ch != null ? `（收到的 data.character = ${JSON.stringify(ch)}）` : '（spec 里没写 data.character）'));
     FR = Object.fromEntries(Object.entries(ch.frames).map(([k, v]) => [k, ctx.IMG[v]]));
     if (!FR.rest && !FR.talk) throw new Error('y4 data.character.frames 至少要有 rest 或 talk 一张（现有：' + Object.keys(FR).join(' ') + '）');
+    for (const q of ctx.of('point', 'title')) {
+      const pose = q.data?.pose;
+      if (pose != null && (typeof pose !== 'string' || !FR[pose]))
+        throw new Error(`y4 at=${q.at} 指定的姿势「${pose}」缺帧；请按本故事动作补生成，不能退回 talk/rest 替代`);
+    }
     L = { cx: ctx.portrait ? W * 0.42 : W * 0.3, fy: ctx.portrait ? H * 0.8 : H * 1.02, R: (ctx.portrait ? 230 : 215) * u };
     L.dy = L.fy - L.R * 0.55;                                             // 桌面高度
     L.mon = ctx.portrait ? { x: W * 0.66, w: 330 * u, h: 240 * u } : { x: W * 0.6, w: 520 * u, h: 340 * u };   // 桌上的电脑（屏幕左上角 x、宽高）

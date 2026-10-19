@@ -11,7 +11,7 @@ Let your coding agent turn art styles into paintings that move.
 36 art styles · 9 explainer animation grammars · 8 types of parameterized clips · Reference code for narrated films
 
 ```sh
-npx skills add alchaincyf/huashu-art-motion
+git clone --branch codex/story-driven-ip-whiteboard https://github.com/ohhahahahahha/huashu-art-motion.git
 ```
 
 [Watch animations](#animation-showcase) · [Explore styles](#see-the-results) · [Get started](#whats-included) · [Download full demos](https://github.com/alchaincyf/huashu-art-motion/releases/latest)
@@ -19,6 +19,8 @@ npx skills add alchaincyf/huashu-art-motion
 </div>
 
 The skill instructions and most reference documents are in Chinese. This README provides an English guide; it does not translate the installed skill itself.
+
+This fork adds story-specific IP action assets and a whiteboard reveal followed by character animation. See the [IP story workflow](references/IP角色故事.md) and [fork maintenance notes](CONTRIBUTING.md). The original project is by Huashu; image generation is performed by the executing agent's available image tools.
 
 ## News
 

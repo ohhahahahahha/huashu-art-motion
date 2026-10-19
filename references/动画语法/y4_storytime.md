@@ -1,5 +1,7 @@
 # y4 · 故事型简笔角色动画（YouTube storytime animation）
 
+固定 IP 的新故事先读 [IP角色故事.md](../IP角色故事.md)，按新分镜生成动作素材。此语法适合单角色讲述；双人剧情与连续动作可用 y3 的 `character` cue 或 scenes。显式 `data.pose` 缺对应帧时启动失败，需补生成；不再静默换成普通说话帧。
+
 > 一句话语法：**口播是主角，画面是给口播配的「表情包」——角色在几个姿势之间快切（0.1 秒）然后定住，笑点靠切到反应大特写、并在那一下里闭嘴。**
 
 代表：TheOdd1sOut（James Rallison）、Jaiden Animations、Domics。工具：据 Jaiden 的 FAQ 和二手资料，三人早期都用 Flash / Adobe Animate（这条没拿到一手原文，只作背景）。

@@ -47,7 +47,72 @@ const ICONS = {
   clock: () => [{ p: A(0, 0, 0.4, 0.4, -Math.PI / 2, Math.PI * 1.55, 32) }, { p: [[0, -0.26], [0, 0], [0.18, 0.1]] }],
   chart: () => [{ p: [[-0.42, -0.42], [-0.42, 0.38], [0.44, 0.38]] }, { p: [[-0.32, 0.22], [-0.12, 0.04], [0.06, 0.12], [0.34, -0.26]], o: 1 }, { p: [[0.18, -0.26], [0.34, -0.26], [0.34, -0.1]], o: 1 }],
 };
-let B, keys, items, OFF, lastEnd, band;
+// character cue：按本故事生成的动作帧；先 Reveal 第一姿势，收笔后播放动作，不复用图文白板的清单排版。
+// data: {mode:'story', penColor?}; cue: {kind:'character', frames, image?, fps?, dur?, loop?,
+//   data:{actor, action, box:[x,y,w,h], to?:[x,y,w,h], reveal?:0.8}}。box/to 相对 safe 内容区。
+let B, keys, items, OFF, lastEnd, band, story;
+function storyLayout(ctx) {
+  const rect = (v, field) => {
+    if (!Array.isArray(v) || v.length !== 4 || !v.every(Number.isFinite) ||
+        v[0] < 0 || v[1] < 0 || v[2] <= 0 || v[3] <= 0 || v[0] + v[2] > 1 + 1e-9 || v[1] + v[3] > 1 + 1e-9)
+      throw new Error(`y3 character ${field} 需要 safe 内容区内的 [x,y,w,h]（0..1）`);
+    return CLIP.sub(v, ctx.box);
+  };
+  const out = ctx.cues.map(q => {
+    const d = q.data || {}, label = `y3 character at=${q.at}`;
+    if (q.kind !== 'character') throw new Error('y3 角色故事模式只接受 character cue；图文白板请分镜或用 scenes 合成');
+    if (typeof d.actor !== 'string' || !d.actor.trim() || typeof d.action !== 'string' || !d.action.trim())
+      throw new Error(`${label} 需要 data.actor 和本故事的具体 data.action`);
+    if (!Array.isArray(q.frames) || !q.frames.length) throw new Error(`${label} 需要本故事动作帧 frames；缺动作请补生成，不能用站立图替代`);
+    const frames = q.frames.map(p => ctx.IMG[p]), first = ctx.IMG[q.image || q.frames[0]];
+    if (!first || frames.some(im => !im)) throw new Error(`${label} 动作素材未加载`);
+    if (frames.some(im => im.width !== first.width || im.height !== first.height))
+      throw new Error(`${label} 绘制图与所有动作帧必须同尺寸并保持同一角色锚点`);
+    const next = ctx.cues.find(z => z.at > q.at && z.kind === 'character' && z.data?.actor === d.actor);
+    const end = q.dur == null ? (next ? next.at : ctx.dur) : q.at + q.dur;
+    const reveal = d.reveal ?? 0.8, fps = q.fps ?? 12;
+    if (!Number.isFinite(q.at) || q.at < 0 || !Number.isFinite(end) || end <= q.at || end > ctx.dur + 1e-9 ||
+        !Number.isFinite(reveal) || reveal < 0 || reveal >= end - q.at || !Number.isFinite(fps) || fps <= 0)
+      throw new Error(`${label} 的 dur/fps/reveal 无效：绘制后须留出表演时间，且不能超过片尾`);
+    const box = rect(d.box, 'box'), to = rect(d.to || d.box, 'to');
+    const fit = CLIP.fit(first.width, first.height, box.x, box.y, box.w, box.h);
+    const zz = DG.zigzag(fit.x, fit.y, fit.w, fit.h, 10), cum = DG.cum(zz);
+    return { q, actor: d.actor, frames, first, end, reveal, fps, box, to, zz, cum, fit };
+  });
+  if (!out.length) throw new Error('y3 角色故事模式需要至少一条 character cue');
+  for (let i = 0; i < out.length; i++) for (let j = i + 1; j < out.length; j++) {
+    const a = out[i], b = out[j];
+    if (a.actor === b.actor && b.q.at < a.end - 1e-9) throw new Error(`y3 同一 actor「${a.actor}」的片段重叠，请先结束上一动作`);
+    if (a.reveal > 0 && b.reveal > 0 && b.q.at < a.q.at + a.reveal - 1e-9)
+      throw new Error('y3 一支笔不能同时绘制两个角色，请错开 reveal 时间');
+  }
+  return out;
+}
+function drawStory(c, t, ctx) {
+  const { W, H, u } = ctx;
+  if (!ctx.alpha) { c.fillStyle = BOARD; c.fillRect(0, 0, W, H); }
+  const g = ctx.alpha ? UI.scratch('clip_y3story', W, H).getContext('2d') : c;
+  if (ctx.alpha) { g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, W, H); }
+  let tip = null;
+  for (const s of story) {
+    if (t < s.q.at || t >= s.end) continue;
+    const drawing = s.reveal > 0 && t < s.q.at + s.reveal;
+    if (drawing) {
+      const p = clamp(ctx.lt(t, s.q.at) / s.reveal), dist = s.cum[s.cum.length - 1] * p;
+      g.save(); if (p < 1) g.clip(DG.revealMask(s.zz, s.cum, dist, s.fit.h / 10 * 2.6));
+      g.drawImage(s.first, s.fit.x, s.fit.y, s.fit.w, s.fit.h); g.restore();
+      tip = DG.pointAt(s.zz, s.cum, dist);
+    } else {
+      const lt = Math.max(0, t - s.q.at - s.reveal), im = MD.frameAt(s.frames, lt, s.fps, !!s.q.loop);
+      const p = MO.sineInOut(clamp(lt / (s.end - s.q.at - s.reveal)));
+      const box = Object.fromEntries(['x', 'y', 'w', 'h'].map(k => [k, lerp(s.box[k], s.to[k], p)]));
+      const fit = CLIP.fit(im.width, im.height, box.x, box.y, box.w, box.h);
+      g.drawImage(im, fit.x, fit.y, fit.w, fit.h);
+    }
+  }
+  if (tip) DG.pen(g, tip[0], tip[1], ctx.data.penColor || INK, Math.sin(t * 7) * 0.03);
+  if (ctx.alpha) halo(c, g.canvas, W, H, 'rgba(255,255,255,0.92)', 4 * u);
+}
 const halo = (c, src, W, H, col, r) => {                          // 透明底：墨色外描一圈白边（8 个方向各压一次剪影）
   const s2 = UI.scratch('clip_y3halo', W, H), g = s2.getContext('2d'); g.globalCompositeOperation = 'source-over'; g.clearRect(0, 0, W, H);
   g.drawImage(src, 0, 0); g.globalCompositeOperation = 'source-in'; g.fillStyle = col; g.fillRect(0, 0, W, H); g.globalCompositeOperation = 'source-over';
@@ -162,6 +227,8 @@ return {
   init(ctx) {
     const { W, H, u, safe } = ctx, p = ctx.pal;
     if (p) { INK = p.ink; ORANGE = p.accent; WASH = PAL.alpha(p.accent, 0.22); BOARD = p.bg; } else { INK = '#0A0503'; ORANGE = '#EF7226'; WASH = 'rgba(239,114,38,.22)'; BOARD = '#FBFBFB'; }
+    story = ctx.data.mode === 'story' || ctx.cues.some(q => q.kind === 'character') ? storyLayout(ctx) : null;
+    if (story) return;
     band = { y0: safe.top, y1: H - safe.bottom }; band.h = band.y1 - band.y0;
     // 字号系数 f 从 1.2 往下试：内容少就放大撑满版面，内容多就缩（最小 0.72），还放不下才让相机往下走
     let L; for (let f = 1.2; f >= 0.7; f -= 0.04) { L = layout(ctx, f); if (L.bottom + 70 * u <= band.y1) break; }   // 内容少就放大（最大 1.2）把版面撑满
@@ -186,6 +253,7 @@ return {
     }
   },
   draw(c, t, ctx) {
+    if (story) return drawStory(c, t, ctx);
     const { W, H, u } = ctx, cam = CAM.at(keys, t);
     const g = ctx.alpha ? (() => { const b = UI.scratch('clip_y3buf', W, H), x = b.getContext('2d'); x.setTransform(1, 0, 0, 1, 0, 0); x.clearRect(0, 0, W, H); return x; })() : c;
     if (!ctx.alpha) { c.fillStyle = BOARD; c.fillRect(0, 0, W, H); }

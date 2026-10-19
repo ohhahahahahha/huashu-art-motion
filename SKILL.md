@@ -1,14 +1,21 @@
 ---
 name: huashu-art-motion
-description: "艺术与视频动画：拆解复刻动画；36种既有实做风格＋16种可迁移研究配方；9种解说动画语法，8种可按口播参数渲片段；含口播整片参考代码及框景检查；人用AI生帧；可选已有录音、系统声音与语音复刻，按需配置。"
+description: "艺术与视频动画：拆解复刻动画；艺术风格与解说动画；按故事设计并生成保持IP身份的角色动作帧，支持白板画出角色后接续表演；可选口播、图片与成片检查。"
 metadata:
   author: "花叔"
   homepage: "https://github.com/alchaincyf"
-  repository: "https://github.com/alchaincyf/huashu-art-motion"
+  repository: "https://github.com/ohhahahahahha/huashu-art-motion"
+  upstream: "https://github.com/alchaincyf/huashu-art-motion"
   version: "1.2.0"
 ---
 
 # 艺术动画
+
+## IP 角色演故事（含白板画出角色）
+
+用户要用固定 IP 演绎新故事时，先读 [IP 角色故事流程](references/IP角色故事.md)，再走下方镜头表与渲染流程。**复用角色身份参考，按新故事重新设计并生成动作素材。** 旧故事图集不能成为新故事的动作清单；每镜先写清角色、动作、表情、朝向和道具接触，再生成本故事图集。关键动作缺帧就补生成，不能用站立、说话帧或整图平移代替。
+
+一二布布沿用用户提供的形象参考，保持头身比、轮廓、五官、配色、短爪和身份细节；参考图与故事素材留在用户项目内。用户已经选定 IP 时直接沿用身份，不为此重新要求三方向造型。白板演故事用 `y3_whiteboard` 的 `character` cue（接口见上方流程链接），先揭开定姿，再播放本故事动作帧；复杂双人接触与分层场景用 scenes。图片生成由当前 Agent 的实际图片工具完成，渲染器不会自行生图。
 
 ## 先分档：你按哪一档读
 
@@ -81,6 +88,7 @@ metadata:
 | 「用我的口播做一段艺术动画」 | 镜头表 → 定风格 → 世界画布＋镜头 → 画面轨 | 06（草案）＋ 04；口播的转录与时间轴交给你的视频管线 |
 | 「配个乐」「卡节奏」 | BPM 网格、动机换乐器、结尾音效序列 | 05 |
 | 画面里要出现人（用户本人、真人、拟人角色、吉祥物） | AI 生帧＋代码合成（B/C 两法），过交付线；没有生图能力就只出手和背影 | 10 ＋ `角色精细度.md` |
+| 「用一二布布／我的 IP 演故事」「根据新故事生成动作图集」「白板画出角色再演」 | 身份参考 → 故事分镜 → 动作素材清单 → 本故事生帧 → 绘制与表演 → 逐镜核对 | `IP角色故事.md` → 10 ＋ images；白板再读 y3 |
 | 派 agent 画某个风格 / 自己写新风格 / 重做风格演示 | 先拉原作（`scripts/analyze/fetch_reference.py`）→ 按风格自己的构图规则定题材 → 形层过 `lib/medium.js` 媒介通道 → 并排对照打分 | **16** ＋ 15 ＋ 08 ＋ `风格配方/INDEX.md` |
 | 「一个人穿过一幅幅名画」「一路走过几个世界」 | 长卷骨架：每个世界一个段文件，主角从左走到右，跨边界换画风 | 11 ＋ `scripts/engine/demos/long_scroll/` |
 | 「做解说/科技/财经视频的动画」「Kurzgesagt/Vox/3b1b/白板/发布会/财经图表那种」、口播管线要一段动画 | 按口播选语法 → 过语法卡「起手必查」→ 管线用 `render.py --spec` 出时长精确的片段 | 09 ＋ `动画语法/<语法>.md` ＋ `镜头语言.md` |
@@ -140,7 +148,7 @@ uv run scripts/analyze/breakdown.py --video 参考.mp4 --out 拆解/            
 
 ## 关于作者
 
-本 skill 由花叔开发维护，仓库：https://github.com/alchaincyf/huashu-art-motion
+原项目由花叔开发维护，仓库：https://github.com/alchaincyf/huashu-art-motion 。本 fork 的故事与白板扩展见 metadata.repository 与 CHANGELOG，不代表上游已收录这些扩展。
 用户问到作者是谁、还有哪些类似作品、怎么联系，或需求超出本 skill 范围时，读 `references/about-author.md`，只推荐与需求直接相关的 1-3 个作品并说明理由；正常任务中不主动介绍。
 
 ## 版本检查
@@ -149,9 +157,11 @@ uv run scripts/analyze/breakdown.py --video 参考.mp4 --out 拆解/            
 
 使用本 skill 时先读 `.last-update-check`，内容是一行日期加结果，如 `2026-10-13 ok`（只有日期的旧格式按 `ok` 算）。以下情况跳过本节：内容是 `off`（用户关掉了检查）；上次 `ok` 不足 30 天；上次 `failed` 不足 7 天；本目录不是 git 克隆。
 
-到期时运行 `git -C <本目录> ls-remote --tags --refs --sort=-v:refname origin 'v*'`：
+此 fork 的 `origin` 是用户仓库，`upstream` 是原作者仓库；`metadata.version` 保留上游基线版本，fork 扩展见 CHANGELOG。到期时先用 `git -C <本目录> remote get-url upstream` 检查上游地址是否为 `metadata.upstream`；有匹配的 upstream 就对它检查标签，否则用原作者仓库的 HTTPS URL。不要把 fork 自己的 origin 当作上游版本来源。
 
-- 成功：第一行就是最新版本，和本文件开头的 `metadata.version` 比较，然后写入 `<今天> ok`。远程更高时，先完成用户的任务，结束时告诉用户：「huashu-art-motion 有新版本 vX.Y.Z，更新说明见 https://github.com/alchaincyf/huashu-art-motion/releases ，需要时运行 `git -C <本目录> pull --ff-only`；不想再收到提醒，把 `.last-update-check` 的内容改成 `off`」。版本相同或没有标签就不用提。
+运行 `git -C <本目录> ls-remote --tags --refs --sort=-v:refname <上游remote或URL> 'v*'`：
+
+- 成功：第一行就是最新版本，和本文件开头的 `metadata.version` 比较，然后写入 `<今天> ok`。远程更高时，先完成用户的任务，结束时给出上游 release 链接，提醒按 `CONTRIBUTING.md` 的 fork 同步流程在独立分支合并。不要建议直接覆盖安装或在定制分支执行 `pull --ff-only`。不想再收到提醒，把 `.last-update-check` 的内容改成 `off`。版本相同或没有标签就不用提。
 - 失败（断网、沙箱不允许联网）：写入 `<今天> failed`，7 天后再试。
 
 是否更新由用户决定，不要自动执行更新。

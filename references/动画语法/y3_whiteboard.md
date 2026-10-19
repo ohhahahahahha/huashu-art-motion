@@ -2,6 +2,8 @@
 
 一句话：讲者说一句，手就在一张大白板上写一句、画一个图；相机跟着论证在板上移动，最后拉远，观众看到整场论证是一张图。
 
+**本 fork 扩展：IP 角色故事模式。** 用户要「画出一二布布，再让他们演新故事」时，先走 [IP角色故事.md](../IP角色故事.md) 的动作设计与生成流程。参数化接口支持 `character` cue：先 Reveal 首姿，再播放本故事动作帧。它与本卡原有的 RSA 图文白板分开排版，不套「圆点＋短句＋图标」，也不强制片尾拉远全图。Reveal 仍是遮罩揭开，真实逐笔描线需要额外路径。
+
 示范片：`scripts/engine/demos/y3_whiteboard/`（渲染 `render.py --film demos/y3_whiteboard`）（8s，3 镜，转场 2 种＋收尾拉远），总览：`assets/动画语法/y3_whiteboard_总览.jpg`
 依据：本风格的调研（调研原文与逐帧数据留在实验归档、没收进 skill，用到的数字已摘进本卡）。实测了 RSA Animate《Changing Education Paradigms》和 Minute Physics《Why is it Dark at Night?》，还查了 VideoScribe、Doodly 的官方文档和 Andrew Park、Henry Reich 的一手说法。
 
